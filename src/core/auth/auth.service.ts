@@ -1,19 +1,22 @@
+// src/modules/auth/auth.service.ts
 import { Injectable } from '@nestjs/common';
 import { JwtService } from '@nestjs/jwt';
 import { UsersService } from '../../modules/users/users.service';
 import * as bcrypt from 'bcrypt';
 import { User } from '../../modules/users/entities/user.entity';
+import { TokenBlacklistService } from '../../modules/auth/token-blacklist.service';
 
 @Injectable()
 export class AuthService {
   constructor(
     private readonly usersService: UsersService,
     private readonly jwtService: JwtService,
+    private readonly tokenBlacklistService: TokenBlacklistService,
   ) {}
 
   async validateUser(
     email: string,
-    password: string
+    password: string,
   ): Promise<Omit<User, 'password' | 'hashPassword'> | null> {
     const user = await this.usersService.findByEmail(email);
     if (!user) return null;
@@ -21,7 +24,6 @@ export class AuthService {
     const isMatch = await bcrypt.compare(password, user.password);
     if (!isMatch) return null;
 
-    // Omit both 'password' and 'hashPassword'
     const { password: _, hashPassword: __, ...result } = user;
     return result;
   }
@@ -36,5 +38,12 @@ export class AuthService {
         role: user.role,
       },
     };
+  }
+
+  async logout(token: string): Promise<void> {
+    const decoded = this.jwtService.decode(token) as { exp: number };
+    if (decoded?.exp) {
+      this.tokenBlacklistService.add(token, decoded.exp);
+    }
   }
 }

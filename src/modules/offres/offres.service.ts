@@ -27,6 +27,16 @@ export class OffresService {
     return offre;
   }
 
+  async getImageUrl(id: number): Promise<string> {
+  const offre = await this.findOne(id);
+
+  if (!offre.imageUrl) {
+    throw new NotFoundException("Cette offre n'a pas d'image");
+  }
+
+  return offre.imageUrl;
+}
+
   async update(id: number, updateOffreDto: UpdateOffreDto): Promise<Offre> {
     const offre = await this.findOne(id);
     Object.assign(offre, updateOffreDto);

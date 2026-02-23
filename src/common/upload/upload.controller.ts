@@ -29,7 +29,7 @@ export class UploadController {
         },
       }),
       limits: {
-        fileSize: 5 * 1024 * 1024, // 5 MB max
+        fileSize: 5 * 1024 * 1024,
       },
       fileFilter: (req, file, callback) => {
         const allowedTypes = /jpeg|jpg|png|webp/;
@@ -48,7 +48,6 @@ export class UploadController {
     if (!file) throw new BadRequestException('Aucun fichier reçu');
 
     const imageUrl = `${process.env.BASE_URL || 'http://localhost:3000'}/uploads/${file.filename}`;
-
     return { imageUrl };
   }
 }

@@ -8,7 +8,9 @@ import {
   Param,
   ParseIntPipe,
   UseGuards,
+  Res,
 } from '@nestjs/common';
+import type { Response } from 'express';
 import { OffresService } from './offres.service';
 import { CreateOffreDto } from './dto/create-offre.dto';
 import { UpdateOffreDto } from './dto/update-offre.dto';
@@ -20,7 +22,6 @@ import { Roles } from '../../common/decorators/roles.decorator';
 export class OffresController {
   constructor(private readonly offresService: OffresService) {}
 
-  // Public — lecture des offres sans authentification
   @Get()
   findAll() {
     return this.offresService.findAll();
@@ -29,6 +30,15 @@ export class OffresController {
   @Get(':id')
   findOne(@Param('id', ParseIntPipe) id: number) {
     return this.offresService.findOne(id);
+  }
+
+  @Get(':id/image')
+  async getImage(
+    @Param('id', ParseIntPipe) id: number,
+    @Res() res: Response,
+  ) {
+    const imageUrl = await this.offresService.getImageUrl(id);
+    return res.redirect(imageUrl);
   }
 
   // Protégé — admin uniquement
