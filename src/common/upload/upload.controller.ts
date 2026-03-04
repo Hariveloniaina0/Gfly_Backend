@@ -21,7 +21,7 @@ export class UploadController {
   @UseInterceptors(
     FileInterceptor('file', {
       storage: diskStorage({
-        destination: './uploads',
+        destination: './uploads/offres',
         filename: (req, file, callback) => {
           const uniqueSuffix = Date.now() + '-' + Math.round(Math.random() * 1e9);
           const ext = extname(file.originalname);
@@ -47,7 +47,7 @@ export class UploadController {
   uploadFile(@UploadedFile() file: Express.Multer.File) {
     if (!file) throw new BadRequestException('Aucun fichier reçu');
 
-    const imageUrl = `${process.env.BASE_URL || 'http://localhost:3000'}/uploads/${file.filename}`;
+    const imageUrl = `${process.env.BASE_URL || 'http://localhost:3000'}/uploads/offres/${file.filename}`;
     return { imageUrl };
   }
 }

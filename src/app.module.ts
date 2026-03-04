@@ -12,6 +12,10 @@ import databaseConfig from './config/database.config';
 import { UsersService } from './modules/users/users.service';
 import { OffresModule } from './modules/offres/offres.module';
 import { UploadModule } from './common/upload/upload.module';
+import { CandidaturesModule } from './modules/candidatures/candidatures.module';
+import { Candidature } from './modules/candidatures/entities/candidature.entity';
+import { ContactModule } from './modules/contact/contact.module';
+
 
 @Module({
   imports: [
@@ -28,8 +32,9 @@ import { UploadModule } from './common/upload/upload.module';
         username: configService.get('database.username'),
         password: configService.get('database.password'),
         database: configService.get('database.name'),
-        entities: [User , Offre],
+        entities: [User, Offre, Candidature],
         synchronize: process.env.NODE_ENV !== 'production',
+        //  dropSchema: process.env.NODE_ENV === 'development',
         logging: process.env.NODE_ENV === 'development',
       }),
       inject: [ConfigService],
@@ -39,7 +44,8 @@ import { UploadModule } from './common/upload/upload.module';
     UsersModule,
     OffresModule,
     UploadModule,
-
+    CandidaturesModule,
+    ContactModule,
   ],
   controllers: [AppController],
   providers: [AppService],

@@ -23,9 +23,13 @@ async function bootstrap() {
     }),
   );
 
-  app.useStaticAssets(join(__dirname, '..', 'uploads'), {
-    prefix: '/uploads',
+  app.useStaticAssets(join(__dirname, '..', 'uploads', 'offres'), {
+    prefix: '/uploads/offres',
   });
+
+  app.useStaticAssets(join(__dirname, '..', 'uploads', 'candidatures'), {
+  prefix: '/uploads/candidatures',
+});
 
   await app.listen(process.env.PORT || 3000);
   console.log(`🚀 Server running on http://localhost:${process.env.PORT || 3000}/api`);
