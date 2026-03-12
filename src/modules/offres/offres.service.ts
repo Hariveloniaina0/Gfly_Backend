@@ -4,6 +4,8 @@ import { Repository } from 'typeorm';
 import { Offre } from './entities/offre.entity';
 import { CreateOffreDto } from './dto/create-offre.dto';
 import { UpdateOffreDto } from './dto/update-offre.dto';
+import { QueryOffresDto } from './dto/query-offres.dto';
+import { PaginatedResult } from '../../common/interfaces/paginated-result.interface';
 
 @Injectable()
 export class OffresService {
@@ -17,8 +19,78 @@ export class OffresService {
     return this.offreRepository.save(offre);
   }
 
-  async findAll(): Promise<Offre[]> {
-    return this.offreRepository.find({ order: { datePublication: 'DESC' } });
+  async findAll(query: QueryOffresDto): Promise<PaginatedResult<Offre>> {
+    const {
+      page = 1,
+      limit = 20,
+      search,
+      typeContrat,
+      dateFrom,
+      dateTo,
+      sortBy = 'datePublication',
+      sortOrder = 'DESC',
+    } = query;
+
+    const qb = this.offreRepository.createQueryBuilder('o');
+
+    // ── Recherche full-text ───────────────────────────────────────────────
+    if (search && search.length > 0) {
+      qb.andWhere(
+        `(
+          LOWER(o.titre)       LIKE :search OR
+          LOWER(o.lieu)        LIKE :search OR
+          LOWER(o.typeContrat) LIKE :search OR
+          LOWER(o.description) LIKE :search
+        )`,
+        { search: `%${search.toLowerCase()}%` },
+      );
+    }
+
+    // ── Filtres ───────────────────────────────────────────────────────────
+    if (typeContrat) {
+      qb.andWhere('o.typeContrat = :typeContrat', { typeContrat });
+    }
+
+    if (dateFrom) {
+      qb.andWhere('o.datePublication >= :dateFrom', {
+        dateFrom: new Date(dateFrom),
+      });
+    }
+
+    if (dateTo) {
+      const end = new Date(dateTo);
+      end.setHours(23, 59, 59, 999);
+      qb.andWhere('o.datePublication <= :dateTo', { dateTo: end });
+    }
+
+    // ── Tri ───────────────────────────────────────────────────────────────
+    const sortColumn =
+      sortBy === 'titre'   ? 'o.titre'
+      : sortBy === 'lieu'  ? 'o.lieu'
+      : sortBy === 'createdAt' ? 'o.createdAt'
+      : 'o.datePublication';
+
+    qb.orderBy(sortColumn, sortOrder);
+
+    // ── Pagination ────────────────────────────────────────────────────────
+    const safePage  = Math.max(1, page);
+    const safeLimit = Math.min(100, Math.max(1, limit));
+
+    qb.skip((safePage - 1) * safeLimit).take(safeLimit);
+
+    // ── Exécution ─────────────────────────────────────────────────────────
+    const [data, total] = await qb.getManyAndCount();
+    const totalPages = Math.ceil(total / safeLimit);
+
+    return {
+      data,
+      total,
+      page: safePage,
+      limit: safeLimit,
+      totalPages,
+      hasNextPage: safePage < totalPages,
+      hasPrevPage: safePage > 1,
+    };
   }
 
   async findOne(id: number): Promise<Offre> {
@@ -28,14 +100,10 @@ export class OffresService {
   }
 
   async getImageUrl(id: number): Promise<string> {
-  const offre = await this.findOne(id);
-
-  if (!offre.imageUrl) {
-    throw new NotFoundException("Cette offre n'a pas d'image");
+    const offre = await this.findOne(id);
+    if (!offre.imageUrl) throw new NotFoundException("Cette offre n'a pas d'image");
+    return offre.imageUrl;
   }
-
-  return offre.imageUrl;
-}
 
   async update(id: number, updateOffreDto: UpdateOffreDto): Promise<Offre> {
     const offre = await this.findOne(id);

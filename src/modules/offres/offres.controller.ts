@@ -17,16 +17,20 @@ import { UpdateOffreDto } from './dto/update-offre.dto';
 import { JwtAuthGuard } from '../../core/auth/guards/jwt-auth.guard';
 import { RolesGuard } from '../../common/guards/roles.guard';
 import { Roles } from '../../common/decorators/roles.decorator';
+import { Query, ValidationPipe } from '@nestjs/common';
+import { QueryOffresDto } from './dto/query-offres.dto';
 
 @Controller('offres')
 export class OffresController {
   constructor(private readonly offresService: OffresService) {}
 
-  @Get()
-  findAll() {
-    return this.offresService.findAll();
-  }
-
+@Get()
+findAll(
+  @Query(new ValidationPipe({ transform: true, whitelist: true }))
+  query: QueryOffresDto,
+) {
+  return this.offresService.findAll(query);
+}
   @Get(':id')
   findOne(@Param('id', ParseIntPipe) id: number) {
     return this.offresService.findOne(id);
