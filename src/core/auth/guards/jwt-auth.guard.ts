@@ -17,9 +17,6 @@ canActivate(context: ExecutionContext) {
   const request = context.switchToHttp().getRequest<Request>();
   const token = this.extractToken(request);
   
-  console.log('=== JwtAuthGuard ===');
-  console.log('Token reçu:', token ? token.substring(0, 20) + '...' : 'ABSENT');
-  console.log('Blacklisté:', token ? this.tokenBlacklistService.isBlacklisted(token) : 'N/A');
 
   if (token && this.tokenBlacklistService.isBlacklisted(token)) {
     throw new UnauthorizedException('Token révoqué');

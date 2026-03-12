@@ -89,11 +89,14 @@ export class CandidaturesService {
         }
     }
 
+    // candidatures.service.ts
     findAll(): Promise<Candidature[]> {
-        return this.candidatureRepo.find({
-            order: { createdAt: 'DESC' },
-            relations: ['offre'],
-        });
+        return this.candidatureRepo
+            .find({ order: { createdAt: 'DESC' }, relations: ['offre'] })
+            .catch((err) => {
+                this.logger.error(`findAll CRASH: ${err.message}`);
+                throw err;
+            });
     }
 
     findByOffre(offreId: number): Promise<Candidature[]> {
@@ -104,8 +107,7 @@ export class CandidaturesService {
     }
 
     getFileUrl(filename: string, type: 'cv' | 'lettre'): string {
-        const baseUrl = this.configService.get<string>('BASE_URL', 'http://localhost:3000');
-        return `${baseUrl}/uploads/candidatures/${type}/${filename}`;
+        return `${this.configService.get<string>('BASE_URL')}/uploads/candidatures/${type}/${filename}`;
     }
 
     private safeDeleteFile(filePath: string): void {

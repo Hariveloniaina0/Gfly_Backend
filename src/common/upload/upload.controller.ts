@@ -47,7 +47,7 @@ export class UploadController {
   uploadFile(@UploadedFile() file: Express.Multer.File) {
     if (!file) throw new BadRequestException('Aucun fichier reçu');
 
-    const imageUrl = `${process.env.BASE_URL || 'http://localhost:3000'}/uploads/offres/${file.filename}`;
+    const imageUrl = `${process.env.BASE_URL}/uploads/offres/${file.filename}`;
     return { imageUrl };
   }
 }

@@ -59,6 +59,5 @@ export class UsersService {
     });
 
     await this.userRepository.save(admin);
-    console.log(`✅ Admin créé : ${adminEmail}`);
   }
 }

@@ -25,11 +25,16 @@ export class MailService {
 
   async sendCandidatureNotification(candidature: Candidature): Promise<void> {
     const offreTitre = candidature.offre?.titre ?? `Offre #${candidature.offreId}`;
-    const offreLieu  = candidature.offre?.lieu  ?? '—';
-    const recipientEmail = candidature.offre?.email
-      ?? this.configService.get<string>('MAIL_DEFAULT_RECIPIENT');
+    const offreLieu = candidature.offre?.lieu ?? '—';
+    const defaultRecipient = this.configService.get<string>('MAIL_DEFAULT_RECIPIENT');
+    const recipientEmail = defaultRecipient || candidature.offre?.email;
 
-const attachments: nodemailer.SendMailOptions['attachments'] = [
+    if (!recipientEmail) {
+      this.logger.warn('Aucun destinataire configuré pour la candidature !');
+      return; 
+    }
+
+    const attachments: nodemailer.SendMailOptions['attachments'] = [
       {
         filename: candidature.cvFilename,
         path: join(process.cwd(), 'uploads', 'candidatures', 'cv', candidature.cvPath),

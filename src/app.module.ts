@@ -34,7 +34,7 @@ import { ContactModule } from './modules/contact/contact.module';
         database: configService.get('database.name'),
         entities: [User, Offre, Candidature],
         synchronize: process.env.NODE_ENV !== 'production',
-        //  dropSchema: process.env.NODE_ENV === 'development',
+        //dropSchema: process.env.NODE_ENV === 'development',
         logging: process.env.NODE_ENV === 'development',
       }),
       inject: [ConfigService],

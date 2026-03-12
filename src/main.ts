@@ -9,12 +9,32 @@ async function bootstrap() {
 
   app.setGlobalPrefix('api');
 
+  // ── CORS ─────────────────────────────────────────────────────────────────
+  const allowedOrigins = process.env.FRONTEND_URL
+    ? process.env.FRONTEND_URL.split(',').map(u => u.trim())
+    : [];
+
+  if (allowedOrigins.length === 0) {
+    console.warn('[CORS] ⚠️  FRONTEND_URL non définie — aucune origine autorisée');
+  }
+
   app.enableCors({
-    origin: process.env.FRONTEND_URL || 'http://localhost:5173',
-    methods: ['GET', 'POST', 'PUT', 'PATCH', 'DELETE'],
+    origin: (origin, callback) => {
+      if (!origin) return callback(null, true);
+
+      if (allowedOrigins.includes(origin)) {
+        callback(null, true);
+      } else {
+        console.error(`[CORS] Origine bloquée : ${origin}`);
+        callback(new Error(`Origine non autorisée par CORS : ${origin}`));
+      }
+    },
+    methods: ['GET', 'POST', 'PUT', 'PATCH', 'DELETE', 'OPTIONS'],
+    allowedHeaders: ['Content-Type', 'Authorization'],
     credentials: true,
   });
 
+  // ── Validation ────────────────────────────────────────────────────────────
   app.useGlobalPipes(
     new ValidationPipe({
       whitelist: true,
@@ -23,16 +43,20 @@ async function bootstrap() {
     }),
   );
 
-  app.useStaticAssets(join(__dirname, '..', 'uploads', 'offres'), {
+  // ── Static assets ─────────────────────────────────────────────────────────
+  const uploadsRoot = join(process.cwd(), 'uploads');
+
+  app.useStaticAssets(join(uploadsRoot, 'offres'), {
     prefix: '/uploads/offres',
   });
 
-  app.useStaticAssets(join(__dirname, '..', 'uploads', 'candidatures'), {
-  prefix: '/uploads/candidatures',
-});
+  app.useStaticAssets(join(uploadsRoot, 'candidatures'), {
+    prefix: '/uploads/candidatures',
+  });
 
-  await app.listen(process.env.PORT || 3000);
-  console.log(`🚀 Server running on http://localhost:${process.env.PORT || 3000}/api`);
+  // ── Listen ────────────────────────────────────────────────────────────────
+  const port = process.env.PORT ?? 3000;
+  await app.listen(port, '0.0.0.0');
 }
 
 bootstrap();
